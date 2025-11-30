@@ -1,6 +1,6 @@
 .venv/
 __pycache__/
-data/raw/*
-data/preprocessed/*
-models/binary/*
-models/multi/*
+data/raw/*.pkl
+data/preprocessed/*.pkl
+models/binary/*.pkl
+models/multi/*.pkl
