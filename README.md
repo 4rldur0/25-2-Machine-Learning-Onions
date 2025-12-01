@@ -24,7 +24,8 @@ This project implements a **Website Fingerprinting (WF) attack** on the Tor anon
 ├── 02_Model_Training_Binary.ipynb      # [Step 2-1] Training for Open-world (Binary)
 ├── 02_Model_Training_Multi.ipynb       # [Step 2-2] Training for Closed-world (Multi-class)
 ├── 03_Final_Evaluation_Closed.ipynb    # [Step 3-1] Evaluation metrics for Closed-world
-├── 03_Final_Evaluation_Open.ipynb      # [Step 3-2] Evaluation metrics for Open-world
+├── 03_Final_Evaluation_Open_Binary.ipynb      # [Step 3-2] Evaluation metrics for Open-world Binary
+├── 03_Final_Evaluation_Open_Multiclass.ipynb  # [Step 3-3] Evaluation metrics for Open-world Multiclass
 ├── README.md                           # Project documentation
 ├── requirements.txt                    # Python dependencies
 ├── data
