@@ -21,8 +21,8 @@ This project implements a **Website Fingerprinting (WF) attack** on the Tor anon
 ```bash
 .
 ├── 01_Preprocessing_33 features.ipynb  # [Step 1] Feature extraction & Data split
-├── 02_Model_Training_Binary.ipynb      # [Step 2-1] Training for Open-world (Binary)
-├── 02_Model_Training_Multi.ipynb       # [Step 2-2] Training for Closed-world (Multi-class)
+├── 02_Model_Training_Binary.ipynb      # [Step 2-1] Training for Binary classifier
+├── 02_Model_Training_Multi.ipynb       # [Step 2-2] Training for Multi-class Classifier
 ├── 03_Final_Evaluation_Closed.ipynb    # [Step 3-1] Evaluation metrics for Closed-world
 ├── 03_Final_Evaluation_Open.ipynb      # [Step 3-2] Evaluation metrics for Open-world
 ├── README.md                           # Project documentation
@@ -39,6 +39,7 @@ This project implements a **Website Fingerprinting (WF) attack** on the Tor anon
 └── src                                 # Source code modules (Helper functions)
     ├── evaluation_binary.py            # Metrics & plotting for binary tasks
     ├── evaluation_multi.py             # Metrics & plotting for multi-class tasks
+    ├── evaluation_final.py             # Evaluation Piplelines for both scenarios (Closed/Open)
     └── train_tuning.py                 # Training & GridSearch logic
 ```
 
@@ -46,10 +47,23 @@ This project implements a **Website Fingerprinting (WF) attack** on the Tor anon
 
 ### Step 0: Environment Setup
 
+A. Install Dependencies
 Install the required Python packages.
 
 ```bash
 pip install -r requirements.txt
+```
+
+B. Configure Path Settings
+Before running any notebook, you must configure the root path according to your environment. Open each notebook and modify the Settings cell at the beginning:
+```python
+# ⚠️ Uncomment if running on Goggle Colab
+# from google.colab import drive 
+# drive.mount('/content/drive')
+
+ROOT = "/content/drive/25-2-Machine-Learning-Onions/"  # ⚠️ Change this to your project path
+import sys
+sys.path.append(ROOT)
 ```
 
 ### Step 1: Data Preparation & Preprocessing
@@ -57,7 +71,10 @@ pip install -r requirements.txt
 1.  Place the raw dataset files into the `data/raw/` directory.
 2.  Run **`01_Preprocessing_33 features.ipynb`**.
       * This notebook extracts **33 statistical features** (packet size, timing, bursts, etc.) from the raw data.
-      * It splits the data and saves processed files (`close_train_33.pkl`, `open_test_33.pkl`, etc.) into `data/preprocessed/`.
+      * It splits the data and saves processed files into `data/preprocessed/`.
+      * Output:
+        * `close_train_33.pkl`, `close_val_33.pkl`, `close_test_33.pkl` (for Multi-class Model)
+        * `open_train_33.pkl`, `open_val_33.pkl`, `open_test_33.pkl` (for Binary Model)
 
 ### Step 2: Model Training
 
@@ -69,7 +86,7 @@ Run the training notebooks to build and save the models.
       * This trains binary classifiers (including Stacking Ensemble) to distinguish between monitored and non-monitored traffic.
       * Trained models are saved to `models/binary/`.
 
-  * **For Closed-world (Multi-class Classification):**
+  * **For Both worlds (Multi-class Classification):**
 
       * Run **`02_Model_Training_Multi.ipynb`**.
       * This trains the multi-class classifier (including Stacking Ensemble) to identify specific websites.
@@ -82,12 +99,12 @@ Run the evaluation notebooks to generate performance reports and visualization.
   * **Closed-world Scenario:**
 
       * Run **`03_Final_Evaluation_Closed.ipynb`**.
-      * **Metric:** # TODO
+      * **Metric:** Confusion Matrix, Per-class Accuracy, F1
 
   * **Open-world Scenario:**
 
       * Run **`03_Final_Evaluation_Open.ipynb`**.
-      * **Metrics:** # TODO
+      * **Metrics:** Confusion Matrix, Per-class Accuracy, F1 for each stage
       * This notebook implements the **Two-stage approach**: First, filtering non-monitored traffic using the Binary Model, then classifying the remaining traffic using the Multi-class Model.
 
 ## 5\. Methodology & Experiment Details
@@ -95,6 +112,6 @@ Run the evaluation notebooks to generate performance reports and visualization.
 We explored various algorithms before finalizing our models. The detailed logs of these experiments can be found in the `experiments/` folder.
 
   * **Feature Set:** Max 33 features (Packet counts, Inter-arrival times, Bursts, etc.).
-  * **Binary Models Explored:** Random Forest, XGBoost, Logistic Regression, LGBM.
-  * **Multi-class Models Explored:** CatBoost, KNN, Neural Networks, SVM.
-  * **Final Selection:** We selected the best-performing models based on validation accuracy.
+  * **Binary Models Explored:** Random Forest, XGBoost, Logistic Regression, LGBM, CatBoost, SVM.
+  * **Multi-class Models Explored:** Random Forest, XGBoost, Logistic Regression, LGBM, CatBoost, KNN, Neural Networks, SVM.
+  * **Final Selection:** We selected the best-performing models based on validation accuracy and FPR.
