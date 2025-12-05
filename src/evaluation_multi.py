@@ -7,45 +7,54 @@ from sklearn.metrics import (
     top_k_accuracy_score, precision_recall_fscore_support, log_loss
 )
 
-def show_confusion_matrix(y, y_pred, class_names, model, do_save=False):
+COLORS = {
+    'hightlight_blue': '#4c72b0',      # Deep Blue (Best Accuracy)
+    'hightlight_red': '#c44e52',       # Deep Red (FPR Bar)
+    'light_gray': '#e1e1e1',     # Light Gray
+    'darker_gray': '#a0a0a0',    # Darker Gray (Other FPRs)
+    'text_color': '#333333'
+}
+
+def show_confusion_matrix(y, y_pred, class_names, model=None, do_save=False):
     print("1. Confusion Matrix\n")
     cm = confusion_matrix(y, y_pred)
-    cm_norm = confusion_matrix(y, y_pred, normalize='true')
 
-    _, axes = plt.subplots(1, 2, figsize=(12, 4))
+    plt.figure(figsize=(max(12, len(class_names)/3), max(9, len(class_names)/4)))
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
-                xticklabels=class_names, yticklabels=class_names, ax=axes[0])
-    axes[0].set_title('Confusion Matrix (counts)')
-    axes[0].set_xlabel('Predicted')
-    axes[0].set_ylabel('True')
+                xticklabels=class_names, yticklabels=class_names)
 
-    sns.heatmap(cm_norm, annot=True, fmt='.2f', cmap='Blues',
-                xticklabels=class_names, yticklabels=class_names, ax=axes[1])
-    axes[1].set_title('Confusion Matrix (normalized by true)')
-    axes[1].set_xlabel('Predicted')
-    axes[1].set_ylabel('True')
-
+    plt.title('Confusion Matrix (counts)')
+    plt.xlabel('Predicted')
+    plt.ylabel('True')
     plt.tight_layout() 
     plt.show()
     if do_save:
         plt.savefig(f'close_confusion_matrix_{model}.png')
     return cm
 
-def per_class_accuracy(cm, class_names, model, do_save=False):
+def per_class_accuracy(cm, class_names, model=None, do_save=False):
     print("2. Per-class Accuracy\n")
     per_class_acc = cm.diagonal() / cm.sum(axis=1)
-    plt.figure(figsize=(7, 4))
-    sns.barplot(x=class_names, y=per_class_acc, color="steelblue")
-    plt.ylim(0, 1.0)
-    plt.title("Per-class Accuracy")
-    plt.ylabel("Accuracy")
+    colors = []
+    for acc in per_class_acc:
+        if acc >= 0.95:
+            colors.append(COLORS['hightlight_blue'])
+        elif acc < 0.7:
+            colors.append(COLORS['hightlight_red'])
+        else:
+            colors.append(COLORS['light_gray'])
+    plt.figure(figsize=(max(12, len(class_names)/3), max(9, len(class_names)/4)))
+    sns.barplot(x=class_names, y=per_class_acc, palette=colors)
+    plt.ylim(0.4, 1.0)
+    plt.title("Per-class Accuracy", color=COLORS['text_color'])
+    plt.ylabel("Accuracy", color=COLORS['text_color'])
     for i, v in enumerate(per_class_acc):
-        plt.text(i, v + 0.02, f"{v:.2f}", ha='center')
+        plt.text(i, v + 0.005, f"{v:.2f}", ha='center', color=COLORS['text_color'], fontsize=9)
     plt.tight_layout(); plt.show()
     if do_save:
         plt.savefig(f'close_per_class_accuracy_{model}.png')
 
-def overall_metrics(y, y_pred, y_prob, n_classes, do_save=False):
+def overall_metrics(y, y_pred, n_classes=None, y_prob=None, do_save=False):
     print("3. Overall Metrics\n")
     acc = accuracy_score(y, y_pred)
 
@@ -68,14 +77,14 @@ def overall_metrics(y, y_pred, y_prob, n_classes, do_save=False):
     except Exception as e:
         print(f"- Log Loss: N/A ({e})")
 
-def top_k_accuracy(y, y_prob, n_classes, do_save=False):
+def top_k_accuracy(y, y_prob, class_names, do_save=False):
     print("4. Top k Accuracy\n")
     for k in [1, 3, 5]:
-        k_eff = min(k, n_classes)  # incase k > #classes
-        topk_acc = top_k_accuracy_score(y, y_prob, k=k_eff, labels=list(range(n_classes)))
+        k_eff = min(k, len(class_names))  # incase k > #classes
+        topk_acc = top_k_accuracy_score(y, y_prob, k=k_eff, labels=class_names)
         print(f"- Top-{k_eff} accuracy: {topk_acc:.4f}")
 
-def confidence_analysis(y, y_pred, y_prob, model, do_save=False):
+def confidence_analysis(y, y_pred, y_prob, model=None, do_save=False):
     print("5. Confidence Analysis\n")
     max_conf = y_prob.max(axis=1)
     correct = (y_pred == y).astype(int)
