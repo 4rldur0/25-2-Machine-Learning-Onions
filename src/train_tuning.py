@@ -139,10 +139,12 @@ class Model:
                 raise ModelError("Please create/load a model first!")
             model = self._model
 
+        if file_name:
+            file_name = "-"+file_name
         if self.is_binary:
-            file_path = f"models/binary/{self.code}-{file_name}.pkl"
+            file_path = f"models/binary/{self.code}{file_name}.pkl"
         else:
-            file_path = f"models/multi/{self.code}-{file_name}.pkl"
+            file_path = f"models/multi/{self.code}{file_name}.pkl"
         
         try:
             joblib.dump(model, file_path)
