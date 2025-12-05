@@ -12,7 +12,7 @@
 
 ## 2\. Project Overview
 
-This project implements a **Website Fingerprinting (WF) attack** on the Tor anonymous network. We aim to classify encrypted traffic traces to identify which website a user is visiting. The solution covers the full machine learning pipeline: feature extraction, model training (including hyperparameter tuning), and evaluation under both Closed-world and Open-world scenarios.
+This project implements a **Website Fingerprinting (WF) attack** on the [Tor](https://en.wikipedia.org/wiki/Tor_(network)) anonymous network. We aim to classify encrypted traffic traces to identify which website a user is visiting. The solution covers the full machine learning pipeline: feature extraction, model training (including hyperparameter tuning), and evaluation under both Closed-world and Open-world scenarios.
 
   * **Key Strategy:** Utilizing a **Stacking Ensemble** method combining multiple base learners (RF, XGB, LGBM, CAT, etc.) to maximize classification performance.
 
@@ -68,8 +68,11 @@ sys.path.append(ROOT)
 
 ### Step 1: Data Preparation & Preprocessing
 
-1.  Place the raw dataset files into the `data/raw/` directory.
-2.  Run **`01_Preprocessing_33 features.ipynb`**.
+1.  Place the raw dataset pickle files into the `data/raw/` directory.
+      * Monitored dataset file is assumed to be `mon_standard.pkl`.
+      * Unmonitored dataset file is assumed to be `unmon_standard10.pkl`.
+      * Should the files be named differently, change the target filepath in the notebook first.
+3.  Run **`01_Preprocessing_33 features.ipynb`**.
       * This notebook extracts **33 statistical features** (packet size, timing, bursts, etc.) from the raw data.
       * It splits the data and saves processed files into `data/preprocessed/`.
       * Output:
@@ -84,12 +87,14 @@ Run the training notebooks to build and save the models.
 
       * Run **`02_Model_Training_Binary.ipynb`**.
       * This trains binary classifiers (including Stacking Ensemble) to distinguish between monitored and non-monitored traffic.
+           * This notebook trains the models using data from `open_train_33.pkl`, and conducts performance tests using data from `open_val_33.pkl`.
       * Trained models are saved to `models/binary/`.
 
   * **For Both worlds (Multi-class Classification):**
 
       * Run **`02_Model_Training_Multi.ipynb`**.
       * This trains the multi-class classifier (including Stacking Ensemble) to identify specific websites.
+            * This notebook trains the models using data from `close_train_33.pkl`, and conducts performance tests using data from `close_val_33.pkl`.
       * The final model is saved to `models/multi/`.
 
 ### Step 3: Evaluation
@@ -99,13 +104,17 @@ Run the evaluation notebooks to generate performance reports and visualization.
   * **Closed-world Scenario:**
 
       * Run **`03_Final_Evaluation_Closed.ipynb`**.
-      * **Metric:** Confusion Matrix, Per-class Accuracy, F1
+      * **Metrics:** Confusion Matrix, Per-class Accuracy, F1
+           * This notebook evaluates the models against data from `close_test_33.pkl`.
 
   * **Open-world Scenario:**
 
       * Run **`03_Final_Evaluation_Open.ipynb`**.
       * **Metrics:** Confusion Matrix, Per-class Accuracy, F1 for each stage
-      * This notebook implements the **Two-stage approach**: First, filtering non-monitored traffic using the Binary Model, then classifying the remaining traffic using the Multi-class Model.
+            * This notebook evaluates the models against data from `open_test_33.pkl`.
+      * This notebook implements the **two-stage approach**.
+           * Stage 1: Filtering non-monitored traffic using the Binary Model - labelled with -1.
+           * Stage 2: Classifying the remaining traffic using the Multi-class Model - labelled with one of 0 through 94.
 
 ## 5\. Methodology & Experiment Details
 
